@@ -75,12 +75,22 @@ export function SendingProgress() {
           </div>
         </div>
 
-        {/* Error notification */}
-        {error && (
+        {/* Rejection / Error notification */}
+        {status === 'rejected' ? (
+          <div className="p-4 rounded-xl bg-[#FF6B99] border-3 border-black text-black shadow-brutal flex items-center gap-3">
+            <XCircle className="w-8 h-8 text-black shrink-0 stroke-[3]" />
+            <div>
+              <p className="font-black text-sm uppercase tracking-wide">Receiver Declined Request</p>
+              <p className="text-xs font-extrabold text-black mt-0.5">
+                {error || 'Receiver declined the approval.'}
+              </p>
+            </div>
+          </div>
+        ) : error ? (
           <div className="p-3.5 rounded-xl bg-[#FF6B99] border-2 border-black text-black text-xs font-black shadow-brutal-sm">
             <strong>Error:</strong> {error}
           </div>
-        )}
+        ) : null}
 
         {/* Action Controls */}
         <div className="flex items-center justify-end gap-3 pt-3 border-t-2 border-black">

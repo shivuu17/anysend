@@ -10,7 +10,7 @@ import { logger } from '../utils/logger.js';
 export class TransferController {
   static createRequest(req, res) {
     try {
-      const { senderDevice, files, sessionId, token } = req.body;
+      const { senderDevice, senderSocketId, files, sessionId, token } = req.body;
 
       if (!files || !Array.isArray(files) || files.length === 0) {
         return res.status(400).json({ success: false, error: 'No files provided in transfer request' });
@@ -23,9 +23,15 @@ export class TransferController {
         token
       });
 
+      transfer.senderSocketId = senderSocketId;
+
       const io = req.app.get('io');
       if (io) {
-        io.emit('transfer:incoming', { transfer });
+        if (senderSocketId) {
+          io.except(senderSocketId).emit('transfer:incoming', { transfer });
+        } else {
+          io.emit('transfer:incoming', { transfer });
+        }
       }
 
       res.json({ success: true, transferId: transfer.id, transfer });
@@ -54,11 +60,12 @@ export class TransferController {
     try {
       const { id } = req.params;
       const { reason } = req.body || {};
-      const transfer = TransferService.rejectTransfer(id, reason);
+      const defaultReason = reason || 'Receiver declined the approval';
+      const transfer = TransferService.rejectTransfer(id, null, defaultReason);
 
       const io = req.app.get('io');
       if (io) {
-        io.emit('transfer:rejected', { transferId: id, reason: transfer.error });
+        io.to(`transfer_room_${id}`).emit('transfer:rejected', { transferId: id, reason: defaultReason });
       }
 
       res.json({ success: true, transfer });
@@ -115,8 +122,10 @@ export class TransferController {
       const progressData = TransferService.updateChunkProgress(transferId, fileId, cIdx, tChunks, chunkSize);
 
       const io = req.app.get('io');
+      const transferRoom = `transfer_room_${transferId}`;
+
       if (io) {
-        io.emit('transfer:progress', {
+        io.to(transferRoom).emit('transfer:progress', {
           transferId,
           fileId,
           progressPercent: progressData.progressPercent,
@@ -143,7 +152,7 @@ export class TransferController {
         if (!finalizeResult.success) {
           TransferService.cancelTransfer(transferId, finalizeResult.error);
           if (io) {
-            io.emit('transfer:failed', { transferId, fileId, error: finalizeResult.error });
+            io.to(transferRoom).emit('transfer:failed', { transferId, fileId, error: finalizeResult.error });
           }
           return res.status(422).json({ success: false, error: finalizeResult.error });
         }
@@ -152,7 +161,7 @@ export class TransferController {
 
         if (updatedTransfer && updatedTransfer.status === 'completed') {
           if (io) {
-            io.emit('transfer:completed', { transferId, transfer: updatedTransfer });
+            io.to(transferRoom).emit('transfer:completed', { transferId, transfer: updatedTransfer });
           }
         }
 

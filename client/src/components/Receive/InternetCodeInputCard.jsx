@@ -6,6 +6,7 @@ import { Badge } from '../Common/Badge.jsx';
 import { Globe, ArrowRight, Download, CheckCircle2, FileText, RefreshCw } from 'lucide-react';
 import { formatBytes, formatSpeed } from '../../utils/formatters.js';
 import { getApiBaseUrl } from '../../utils/network.js';
+import { saveToGallery } from '../../utils/gallerySaver.js';
 import { useSocket } from '../../context/SocketContext.jsx';
 import api from '../../services/api.js';
 
@@ -16,8 +17,24 @@ export function InternetCodeInputCard() {
   const [status, setStatus] = useState('idle'); // idle, looking_up, paired, downloading, completed, failed
   const [progressPercent, setProgressPercent] = useState(0);
   const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const { socket } = useSocket();
+
+  const handleDownloadFile = async () => {
+    if (!sessionInfo) return;
+    try {
+      setSaving(true);
+      const downloadUrl = `${getApiBaseUrl()}/api/relay/${sessionInfo.code}/download`;
+      const fileName = sessionInfo.files?.[0]?.name || `payload_${sessionInfo.code}.bin`;
+      const fileType = sessionInfo.files?.[0]?.type || '';
+      await saveToGallery(downloadUrl, fileName, fileType);
+    } catch (err) {
+      console.error('Download error:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleLookup = async (e) => {
     e.preventDefault();
@@ -172,17 +189,16 @@ export function InternetCodeInputCard() {
               The file payload has been received and verified via SHA-256.
             </p>
 
-            <a
-              href={`${getApiBaseUrl()}/api/relay/${sessionInfo.code}/download`}
-              download
-              target="_blank"
-              rel="noreferrer"
-              className="inline-block w-full sm:w-auto"
+            <Button
+              variant="primary"
+              size="lg"
+              icon={Download}
+              loading={saving}
+              onClick={handleDownloadFile}
+              className="w-full sm:w-auto"
             >
-              <Button variant="primary" size="lg" icon={Download} className="w-full sm:w-auto">
-                Download Received File
-              </Button>
-            </a>
+              Save Photo / File to Gallery
+            </Button>
           </div>
         )}
 

@@ -7,7 +7,7 @@ export function SettingsPage() {
       <div>
         <h2 className="text-3xl font-black text-black uppercase tracking-tight">Settings</h2>
         <p className="text-xs font-bold text-slate-700 mt-1">
-          Customize node parameters, storage directory, and security options.
+          Customize device identity, auto-accept behavior, and transfer limits.
         </p>
       </div>
 

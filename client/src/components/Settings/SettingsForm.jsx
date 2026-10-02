@@ -2,17 +2,22 @@ import React, { useState } from 'react';
 import { Card } from '../Common/Card.jsx';
 import { Button } from '../Common/Button.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
-import { Save, CheckCircle2, Smartphone, Folder, Shield, Layers } from 'lucide-react';
+import { generateCoolDeviceName } from '../../utils/nameGenerator.js';
+import { Save, CheckCircle2, Smartphone, Shield, Layers, Sparkles } from 'lucide-react';
 
 export function SettingsForm() {
   const { settings, updateSettings } = useSettings();
 
-  const [deviceName, setDeviceName] = useState(settings.deviceName || 'AnySend Host');
-  const [downloadFolder, setDownloadFolder] = useState(settings.downloadFolder || './uploads');
+  const [deviceName, setDeviceName] = useState(settings.deviceName || 'Neon Phoenix');
   const [autoAccept, setAutoAccept] = useState(!!settings.autoAccept);
   const [maxConcurrentTransfers, setMaxConcurrentTransfers] = useState(settings.maxConcurrentTransfers || 5);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const handleRandomizeName = () => {
+    const coolName = generateCoolDeviceName();
+    setDeviceName(coolName);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +26,6 @@ export function SettingsForm() {
 
     const res = await updateSettings({
       deviceName,
-      downloadFolder,
       autoAccept,
       maxConcurrentTransfers: parseInt(maxConcurrentTransfers, 10)
     });
@@ -45,36 +49,29 @@ export function SettingsForm() {
 
         {/* Device Name */}
         <div>
-          <label className="block text-xs font-black text-black uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Smartphone className="w-4 h-4 stroke-[2.5]" />
-            <span>Device Name</span>
+          <label className="block text-xs font-black text-black uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Smartphone className="w-4 h-4 stroke-[2.5]" />
+              <span>Device Name</span>
+            </span>
+            <button
+              type="button"
+              onClick={handleRandomizeName}
+              className="text-[11px] font-black uppercase tracking-wider text-black bg-[#FFE600] px-2.5 py-1 rounded-lg border-2 border-black shadow-brutal-sm hover:bg-[#00F0FF] transition-all flex items-center gap-1.5"
+            >
+              <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Randomize Name</span>
+            </button>
           </label>
           <input
             type="text"
             value={deviceName}
             onChange={(e) => setDeviceName(e.target.value)}
-            placeholder="e.g. AnySend Node, MacBook Pro"
+            placeholder="e.g. Neon Falcon, Cosmic Panther"
             className="w-full bg-white border-2 border-black rounded-xl px-4 py-2.5 text-sm text-black font-extrabold focus:outline-none focus:ring-2 focus:ring-black shadow-brutal-sm"
           />
           <p className="text-[11px] font-bold text-slate-600 mt-1">
-            Device name broadcasted to nearby devices during file transfer requests.
-          </p>
-        </div>
-
-        {/* Storage Download Path */}
-        <div>
-          <label className="block text-xs font-black text-black uppercase tracking-wider mb-2 flex items-center gap-2">
-            <Folder className="w-4 h-4 stroke-[2.5]" />
-            <span>Download Directory</span>
-          </label>
-          <input
-            type="text"
-            value={downloadFolder}
-            onChange={(e) => setDownloadFolder(e.target.value)}
-            className="w-full bg-white border-2 border-black rounded-xl px-4 py-2.5 text-sm text-black font-mono font-extrabold focus:outline-none focus:ring-2 focus:ring-black shadow-brutal-sm"
-          />
-          <p className="text-[11px] font-bold text-slate-600 mt-1">
-            Server path where received files are safely assembled.
+            Cool, unique device name broadcasted to nearby devices during file transfer requests.
           </p>
         </div>
 

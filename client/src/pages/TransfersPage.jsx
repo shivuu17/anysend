@@ -1,15 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../components/Common/Card.jsx';
 import { Button } from '../components/Common/Button.jsx';
 import { Badge } from '../components/Common/Badge.jsx';
 import { useTransfer } from '../context/TransferContext.jsx';
 import { formatBytes, formatDate } from '../utils/formatters.js';
 import { getApiBaseUrl } from '../utils/network.js';
+import { saveToGallery } from '../utils/gallerySaver.js';
 import api from '../services/api.js';
-import { Download, Trash2, FileText, Image, Video, Music } from 'lucide-react';
+import { Download, Trash2, FileText, Image, Video, Music, Check } from 'lucide-react';
 
 export function TransfersPage() {
   const { transferHistory, fetchHistory, loadingHistory } = useTransfer();
+  const [savingFileId, setSavingFileId] = useState(null);
+
+  const handleSaveToGallery = async (downloadUrl, fileName, fileType, fileId) => {
+    try {
+      setSavingFileId(fileId);
+      await saveToGallery(downloadUrl, fileName, fileType);
+    } catch (err) {
+      console.error('Save to gallery error:', err);
+    } finally {
+      setSavingFileId(null);
+    }
+  };
 
   const handleDelete = async (fileId) => {
     try {
@@ -131,16 +144,15 @@ export function TransfersPage() {
                         {/* Download & Save Media Actions */}
                         <div className="flex items-center gap-2">
                           {transfer.status === 'completed' && file.storedName && (
-                            <a
-                              href={downloadUrl}
-                              download={file.name}
-                              target="_blank"
-                              rel="noreferrer"
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              icon={Download}
+                              loading={savingFileId === (file.id || file.storedName)}
+                              onClick={() => handleSaveToGallery(downloadUrl, file.name, file.type, file.id || file.storedName)}
                             >
-                              <Button variant="primary" size="sm" icon={Download}>
-                                {getSaveButtonText(file.name)}
-                              </Button>
-                            </a>
+                              {getSaveButtonText(file.name)}
+                            </Button>
                           )}
 
                           <Button

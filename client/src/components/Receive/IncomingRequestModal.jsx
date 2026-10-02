@@ -1,15 +1,24 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Modal } from '../Common/Modal.jsx';
 import { Button } from '../Common/Button.jsx';
 import { FileText, Check, X, Smartphone } from 'lucide-react';
 import { formatBytes } from '../../utils/formatters.js';
 import { useSocket } from '../../context/SocketContext.jsx';
+import { useSettings } from '../../context/SettingsContext.jsx';
 import api from '../../services/api.js';
 
 export function IncomingRequestModal() {
   const { incomingTransfer, clearIncomingTransfer, socket } = useSocket();
+  const { settings } = useSettings();
+  const navigate = useNavigate();
 
   if (!incomingTransfer) return null;
+
+  // Do not show incoming transfer modal on sender's own device
+  const isSelf = incomingTransfer.senderSocketId === socket?.id ||
+    (incomingTransfer.senderDevice && incomingTransfer.senderDevice === (settings.deviceName || 'AnySend Device'));
+  if (isSelf) return null;
 
   const handleAccept = async () => {
     try {
@@ -18,6 +27,8 @@ export function IncomingRequestModal() {
       } else {
         await api.post(`/transfer/${incomingTransfer.id}/accept`);
       }
+      // Navigate receiver to transfers page so user can view/save photo
+      navigate('/transfers');
     } catch (err) {
       console.error('Error accepting transfer:', err);
     } finally {
@@ -28,9 +39,9 @@ export function IncomingRequestModal() {
   const handleReject = async () => {
     try {
       if (socket) {
-        socket.emit('transfer:reject', { transferId: incomingTransfer.id, reason: 'Declined by receiver' });
+        socket.emit('transfer:reject', { transferId: incomingTransfer.id, reason: 'Receiver declined the approval' });
       } else {
-        await api.post(`/transfer/${incomingTransfer.id}/reject`, { reason: 'Declined by receiver' });
+        await api.post(`/transfer/${incomingTransfer.id}/reject`, { reason: 'Receiver declined the approval' });
       }
     } catch (err) {
       console.error('Error rejecting transfer:', err);

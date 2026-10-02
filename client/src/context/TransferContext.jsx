@@ -71,7 +71,7 @@ export function TransferProvider({ children }) {
       setSendingState(prev => ({
         ...prev,
         status: 'rejected',
-        error: data.reason || 'Rejected by receiver'
+        error: data.reason || 'Receiver declined the approval'
       }));
     };
 
@@ -159,6 +159,7 @@ export function TransferProvider({ children }) {
     try {
       const requestBody = {
         senderDevice: settings.deviceName || 'AnySend Sender',
+        senderSocketId: socket ? socket.id : null,
         files: fileMetaList,
         sessionId: target ? target.sessionId : null,
         token: target ? target.token : null

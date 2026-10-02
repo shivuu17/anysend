@@ -48,7 +48,12 @@ export function SocketProvider({ children }) {
 
     newSocket.on('transfer:incoming', (data) => {
       console.log('Incoming transfer request:', data);
-      setIncomingTransfer(data.transfer);
+      const isMyOwnTransfer = (data.transfer?.senderSocketId && data.transfer?.senderSocketId === newSocket.id) ||
+        (data.transfer?.senderDevice && data.transfer?.senderDevice === (settings.deviceName || 'AnySend Device'));
+
+      if (!isMyOwnTransfer) {
+        setIncomingTransfer(data.transfer);
+      }
     });
 
     setSocket(newSocket);

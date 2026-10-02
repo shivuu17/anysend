@@ -7,14 +7,17 @@ const activeTransfers = new Map();
 
 export class TransferService {
   /**
-   * Registers a new file transfer request.
+   * Registers a new file transfer request with receiver targeting.
    */
-  static createTransferRequest({ senderDevice, files, sessionId, token }) {
+  static createTransferRequest({ senderDevice, senderSocketId = null, receiverSocketId = null, files, sessionId, token }) {
     const transferId = generateTransferId();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min TTL
 
     const transferData = {
       id: transferId,
       sessionId,
+      senderSocketId: senderSocketId || null,
+      receiverSocketId: receiverSocketId || null,
       senderDevice: senderDevice || 'Unknown Sender',
       status: 'pending', // pending, accepted, rejected, transferring, completed, cancelled, failed
       files: files.map((file, idx) => ({
@@ -32,11 +35,12 @@ export class TransferService {
       bytesTransferred: 0,
       startTime: null,
       endTime: null,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      expiresAt
     };
 
     activeTransfers.set(transferId, transferData);
-    logger.info(`Created transfer request ${transferId} with ${files.length} file(s) from ${senderDevice}`);
+    logger.info(`Created targeted transfer request ${transferId} [Sender: ${senderSocketId}, Receiver: ${receiverSocketId}]`);
 
     return transferData;
   }
@@ -46,33 +50,56 @@ export class TransferService {
   }
 
   /**
-   * Receiver accepts a transfer request.
+   * Assigned receiver accepts a transfer request.
    */
-  static acceptTransfer(transferId) {
+  static acceptTransfer(transferId, receiverSocketId = null) {
     const transfer = activeTransfers.get(transferId);
     if (!transfer) {
-      throw new Error(`Transfer ${transferId} not found`);
+      throw new Error(`Transfer ${transferId} not found or expired`);
+    }
+
+    if (new Date() > new Date(transfer.expiresAt)) {
+      transfer.status = 'failed';
+      transfer.error = 'Transfer session expired';
+      activeTransfers.set(transferId, transfer);
+      throw new Error('Transfer session has expired');
     }
 
     if (transfer.status !== 'pending') {
       throw new Error(`Transfer is in status '${transfer.status}', cannot accept`);
     }
 
+    if (transfer.receiverSocketId && receiverSocketId && transfer.receiverSocketId !== receiverSocketId) {
+      throw new Error('Unauthorized: Only the assigned target receiver can accept this transfer request');
+    }
+
+    if (!transfer.receiverSocketId && receiverSocketId) {
+      transfer.receiverSocketId = receiverSocketId;
+    }
+
     transfer.status = 'accepted';
     transfer.startTime = new Date().toISOString();
     activeTransfers.set(transferId, transfer);
 
-    logger.info(`Transfer ${transferId} accepted`);
+    logger.info(`Transfer ${transferId} accepted by receiver ${receiverSocketId || 'unknown'}`);
     return transfer;
   }
 
   /**
-   * Receiver rejects a transfer request.
+   * Assigned receiver rejects a transfer request.
    */
-  static rejectTransfer(transferId, reason = 'Transfer rejected by receiver') {
+  static rejectTransfer(transferId, receiverSocketId = null, reason = 'Transfer rejected by receiver') {
     const transfer = activeTransfers.get(transferId);
     if (!transfer) {
       throw new Error(`Transfer ${transferId} not found`);
+    }
+
+    if (transfer.status !== 'pending') {
+      throw new Error(`Transfer is in status '${transfer.status}', cannot reject`);
+    }
+
+    if (transfer.receiverSocketId && receiverSocketId && transfer.receiverSocketId !== receiverSocketId) {
+      throw new Error('Unauthorized: Only the assigned target receiver can decline this transfer request');
     }
 
     transfer.status = 'rejected';
@@ -83,7 +110,7 @@ export class TransferService {
     MetadataStore.addTransfer(transfer);
     activeTransfers.delete(transferId);
 
-    logger.info(`Transfer ${transferId} rejected: ${reason}`);
+    logger.info(`Transfer ${transferId} rejected by receiver ${receiverSocketId || 'unknown'}: ${reason}`);
     return transfer;
   }
 

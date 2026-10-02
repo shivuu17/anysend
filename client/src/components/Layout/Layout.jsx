@@ -3,6 +3,8 @@ import { Sidebar } from './Sidebar.jsx';
 import { Navbar } from './Navbar.jsx';
 import { MobileNav } from './MobileNav.jsx';
 import { IncomingRequestModal } from '../Receive/IncomingRequestModal.jsx';
+import { RejectionToast } from '../Send/RejectionToast.jsx';
+import { StoragePermissionModal } from '../Common/StoragePermissionModal.jsx';
 
 export function Layout({ children }) {
   return (
@@ -21,8 +23,14 @@ export function Layout({ children }) {
       {/* Mobile Bottom Navigation */}
       <MobileNav />
 
+      {/* Storage & Gallery Access Permission Modal */}
+      <StoragePermissionModal />
+
       {/* Global Incoming Transfer Approval Modal */}
       <IncomingRequestModal />
+
+      {/* Global Rejection Toast for Sender */}
+      <RejectionToast />
     </div>
   );
 }
