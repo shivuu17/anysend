@@ -48,6 +48,13 @@ export function SocketProvider({ children }) {
 
     newSocket.on('transfer:incoming', (data) => {
       console.log('Incoming transfer request:', data);
+
+      // Filter out transfers targeted to a different receiver socket
+      if (data.transfer?.receiverSocketId && data.transfer.receiverSocketId !== newSocket.id) {
+        console.log(`Ignoring incoming transfer ${data.transfer.id}: intended for receiver socket ${data.transfer.receiverSocketId}, but this socket is ${newSocket.id}`);
+        return;
+      }
+
       const isMyOwnTransfer = (data.transfer?.senderSocketId && data.transfer?.senderSocketId === newSocket.id) ||
         (data.transfer?.senderDevice && data.transfer?.senderDevice === (settings.deviceName || 'AnySend Device'));
 

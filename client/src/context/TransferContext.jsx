@@ -160,6 +160,8 @@ export function TransferProvider({ children }) {
       const requestBody = {
         senderDevice: settings.deviceName || 'AnySend Sender',
         senderSocketId: socket ? socket.id : null,
+        receiverSocketId: target ? target.socketId : null,
+        targetDevice: target,
         files: fileMetaList,
         sessionId: target ? target.sessionId : null,
         token: target ? target.token : null

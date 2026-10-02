@@ -15,6 +15,11 @@ export function IncomingRequestModal() {
 
   if (!incomingTransfer) return null;
 
+  // Do not show modal if request is targeted to another receiver socket ID
+  if (incomingTransfer.receiverSocketId && socket?.id && incomingTransfer.receiverSocketId !== socket.id) {
+    return null;
+  }
+
   // Do not show incoming transfer modal on sender's own device
   const isSelf = incomingTransfer.senderSocketId === socket?.id ||
     (incomingTransfer.senderDevice && incomingTransfer.senderDevice === (settings.deviceName || 'AnySend Device'));

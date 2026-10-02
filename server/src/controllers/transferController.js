@@ -10,27 +10,42 @@ import { logger } from '../utils/logger.js';
 export class TransferController {
   static createRequest(req, res) {
     try {
-      const { senderDevice, senderSocketId, files, sessionId, token } = req.body;
+      const { senderDevice, senderSocketId, receiverSocketId, targetDevice, files, sessionId, token } = req.body;
 
       if (!files || !Array.isArray(files) || files.length === 0) {
         return res.status(400).json({ success: false, error: 'No files provided in transfer request' });
       }
 
+      const targetSocketId = receiverSocketId || (targetDevice ? targetDevice.socketId : null);
+
       const transfer = TransferService.createTransferRequest({
         senderDevice,
+        senderSocketId,
+        receiverSocketId: targetSocketId,
         files,
         sessionId,
         token
       });
 
-      transfer.senderSocketId = senderSocketId;
-
       const io = req.app.get('io');
       if (io) {
-        if (senderSocketId) {
-          io.except(senderSocketId).emit('transfer:incoming', { transfer });
+        const transferRoom = `transfer_room_${transfer.id}`;
+
+        if (senderSocketId && io.sockets.sockets.get(senderSocketId)) {
+          io.sockets.sockets.get(senderSocketId).join(transferRoom);
+        }
+
+        if (targetSocketId && io.sockets.sockets.get(targetSocketId)) {
+          const targetSocket = io.sockets.sockets.get(targetSocketId);
+          targetSocket.join(transferRoom);
+          io.to(targetSocketId).emit('transfer:incoming', { transfer });
+          logger.info(`HTTP transfer:request targeted incoming for room ${transferRoom} to receiver socket ${targetSocketId}`);
         } else {
-          io.emit('transfer:incoming', { transfer });
+          if (senderSocketId) {
+            io.except(senderSocketId).emit('transfer:incoming', { transfer });
+          } else {
+            io.emit('transfer:incoming', { transfer });
+          }
         }
       }
 
