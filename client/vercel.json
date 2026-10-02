@@ -5,15 +5,15 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://anysend-hrvy.onrender.com/api/$1"
+      "destination": "https://anysend-hrvy.onrender.com/"
     },
     {
       "source": "/socket.io/(.*)",
-      "destination": "https://anysend-hrvy.onrender.com/socket.io/$1"
+      "destination": "https://anysend-hrvy.onrender.com/"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": "https://anysend-hrvy.onrender.com/uploads/$1"
+      "destination": "https://anysend-hrvy.onrender.com/uploads/"
     },
     {
       "source": "/(.*)",
