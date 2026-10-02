@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api.js';
+import { getApiBaseUrl } from '../utils/network.js';
 import { FileChunker } from '../services/fileChunker.js';
 import { useSocket } from './SocketContext.jsx';
 import { useSettings } from './SettingsContext.jsx';
