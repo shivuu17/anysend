@@ -11,12 +11,18 @@ export function parseQrPayload(qrString) {
 }
 
 export function getApiBaseUrl() {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
   const windowHost = window.location.hostname;
   const windowPort = window.location.port;
 
-  if (!windowPort || windowPort === '3000') {
+  // Local standalone development (Vite running on 3000 without proxy)
+  if (windowPort === '3000') {
     return `http://${windowHost}:5000`;
   }
 
+  // Deployed production environment / Vercel rewrite origin
   return `${window.location.protocol}//${window.location.host}`;
 }
