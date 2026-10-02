@@ -56,8 +56,17 @@ export function SendingProgress() {
           {getStatusBadge()}
         </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-2">
+        {/* Progress Bar & Streaming Indicator */}
+        <div className="space-y-3">
+          {(status === 'transferring' || status === 'accepted' || status === 'requesting') && (
+            <div className="flex items-center gap-2 text-xs font-black text-black">
+              <RefreshCw className="w-4 h-4 animate-spin text-black stroke-[3]" />
+              <span>
+                {status === 'requesting' ? 'Waiting for receiver to accept transfer...' : 'Streaming binary chunks over P2P network...'}
+              </span>
+            </div>
+          )}
+
           <ProgressBar percent={overallPercent} status={status} />
           
           <div className="flex items-center justify-between text-xs text-black font-mono font-extrabold">

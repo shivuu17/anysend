@@ -15,9 +15,12 @@ export function QRCodeCard() {
   const createSession = async () => {
     try {
       setLoading(true);
-      const res = await api.post('/session/create');
+      const res = await api.post('/relay/create', {
+        files: [{ id: 'qr_pair', name: 'Universal QR Pair', size: 0 }],
+        senderDevice: deviceInfo.deviceName || 'AnySend Receiver'
+      });
       if (res.data.success) {
-        setSession(res.data.session);
+        setSession(res.data);
       }
     } catch (err) {
       console.error('Error creating QR session:', err);
@@ -31,19 +34,17 @@ export function QRCodeCard() {
   }, []);
 
   const qrPayloadString = session ? JSON.stringify({
-    version: session.version,
-    host: session.host || deviceInfo.ip,
-    port: session.port || deviceInfo.port,
-    sessionId: session.sessionId,
-    token: session.token,
-    expiresAt: session.expiresAt
+    code: session.code,
+    formattedCode: session.formattedCode,
+    hostUrl: getApiBaseUrl()
   }) : '';
 
-  const copyAddress = () => {
-    const address = `http://${session?.host || deviceInfo.ip}:${session?.port || deviceInfo.port}`;
-    navigator.clipboard.writeText(address);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyCode = () => {
+    if (session?.code) {
+      navigator.clipboard.writeText(session.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -51,14 +52,14 @@ export function QRCodeCard() {
       <div className="flex flex-col items-center">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#00F0FF] border-2 border-black text-xs font-black uppercase tracking-wider mb-3 shadow-brutal-sm">
           <ShieldCheck className="w-4 h-4 stroke-[3]" />
-          <span>Secure Device Pairing</span>
+          <span>Universal Cross-Network QR Code</span>
         </div>
 
         <h3 className="text-2xl font-black text-black uppercase tracking-tight mb-1">
           Scan QR Code To Send
         </h3>
         <p className="text-xs font-bold text-slate-700 max-w-sm mb-6">
-          Open AnySend on another device (iPhone, Android, PC) and scan this payload to initiate transfer.
+          Works across <strong>any network or mobile data (no same Wi-Fi required)</strong>. Point camera to connect instantly.
         </p>
 
         {/* QR Code Frame */}
@@ -81,27 +82,22 @@ export function QRCodeCard() {
           </div>
         </div>
 
-        {/* Host details */}
-        <div className="w-full max-w-xs space-y-2 mb-6 text-xs font-black">
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
-            <span className="text-slate-700 uppercase">Local IP:</span>
-            <span className="font-mono text-black font-extrabold">{session?.host || deviceInfo.ip}</span>
+        {/* 6-Digit Code Display */}
+        {session && (
+          <div className="w-full max-w-xs p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm mb-6 space-y-1">
+            <span className="text-[10px] font-black uppercase text-slate-700">Internet Pairing Code:</span>
+            <p className="font-mono font-black text-2xl text-black tracking-widest">{session.formattedCode}</p>
           </div>
-
-          <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF7F0] border-2 border-black shadow-brutal-sm">
-            <span className="text-slate-700 uppercase">Server Port:</span>
-            <span className="font-mono text-black font-extrabold">{session?.port || deviceInfo.port}</span>
-          </div>
-        </div>
+        )}
 
         {/* Action Controls */}
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" icon={copied ? Check : Copy} onClick={copyAddress}>
-            {copied ? 'Copied URL!' : 'Copy IP Address'}
+          <Button variant="outline" size="sm" icon={copied ? Check : Copy} onClick={copyCode}>
+            {copied ? 'Code Copied!' : 'Copy Pairing Code'}
           </Button>
 
           <Button variant="secondary" size="sm" icon={RefreshCw} loading={loading} onClick={createSession}>
-            New Session
+            New QR Code
           </Button>
         </div>
       </div>

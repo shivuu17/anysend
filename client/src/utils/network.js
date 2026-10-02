@@ -1,12 +1,18 @@
 export function parseQrPayload(qrString) {
   try {
     const data = JSON.parse(qrString);
-    if (data && data.host && data.port && data.sessionId) {
+    if (data && (data.code || (data.host && data.sessionId))) {
       return { valid: true, payload: data };
     }
     return { valid: false, error: 'Invalid AnySend QR code schema' };
   } catch (err) {
-    return { valid: false, error: 'Malformed JSON payload in QR code' };
+    if (typeof qrString === 'string' && qrString.includes('code=')) {
+      const match = qrString.match(/code=(\d{6})/);
+      if (match) {
+        return { valid: true, payload: { code: match[1], isRelay: true } };
+      }
+    }
+    return { valid: false, error: 'Malformed payload in QR code' };
   }
 }
 
