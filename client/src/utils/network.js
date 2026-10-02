@@ -23,6 +23,10 @@ export function getApiBaseUrl() {
     return `http://${windowHost}:5000`;
   }
 
-  // Deployed production environment / Vercel rewrite origin
-  return `${window.location.protocol}//${window.location.host}`;
+  // If running on Vercel or custom domain, use same origin relative path or Render backend fallback
+  if (windowHost && windowHost !== 'localhost' && !windowHost.includes('127.0.0.1')) {
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+
+  return 'https://anysend-hrvy.onrender.com';
 }
