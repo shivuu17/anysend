@@ -163,8 +163,9 @@ export function TransferProvider({ children }) {
         token: target ? target.token : null
       };
 
-      const targetHostUrl = target ? `http://${target.host}:${target.port}` : null;
-      const requestEndpoint = targetHostUrl ? `${targetHostUrl}/api/transfer/request` : `${api.defaults.baseURL}/transfer/request`;
+      const isHttps = window.location.protocol === 'https:';
+      const targetHostUrl = (target && target.host && !isHttps) ? `http://${target.host}:${target.port}` : null;
+      const requestEndpoint = targetHostUrl ? `${targetHostUrl}/api/transfer/request` : `${getApiBaseUrl()}/api/transfer/request`;
 
       const response = await fetch(requestEndpoint, {
         method: 'POST',

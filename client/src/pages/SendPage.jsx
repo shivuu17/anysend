@@ -19,6 +19,7 @@ export function SendPage() {
 
   const handleScanSuccess = (payload) => {
     setTargetDevice(payload);
+    initiateTransfer(payload);
   };
 
   const handleManualConnect = (payload) => {

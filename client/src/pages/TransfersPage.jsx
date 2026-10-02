@@ -6,7 +6,7 @@ import { useTransfer } from '../context/TransferContext.jsx';
 import { formatBytes, formatDate } from '../utils/formatters.js';
 import { getApiBaseUrl } from '../utils/network.js';
 import api from '../services/api.js';
-import { Download, Trash2, FileText } from 'lucide-react';
+import { Download, Trash2, FileText, Image, Video, Music } from 'lucide-react';
 
 export function TransfersPage() {
   const { transferHistory, fetchHistory, loadingHistory } = useTransfer();
@@ -35,13 +35,31 @@ export function TransfersPage() {
     }
   };
 
+  const isImageFile = (name = '') => /\.(png|jpe?g|webp|gif|svg)$/i.test(name);
+  const isVideoFile = (name = '') => /\.(mp4|webm|mov|mkv|avi)$/i.test(name);
+  const isAudioFile = (name = '') => /\.(mp3|wav|ogg|aac|flac)$/i.test(name);
+
+  const getFileIcon = (name = '') => {
+    if (isImageFile(name)) return <Image className="w-4 h-4 stroke-[2.5]" />;
+    if (isVideoFile(name)) return <Video className="w-4 h-4 stroke-[2.5]" />;
+    if (isAudioFile(name)) return <Music className="w-4 h-4 stroke-[2.5]" />;
+    return <FileText className="w-4 h-4 stroke-[2.5]" />;
+  };
+
+  const getSaveButtonText = (name = '') => {
+    if (isImageFile(name)) return 'Save Photo';
+    if (isVideoFile(name)) return 'Save Video';
+    if (isAudioFile(name)) return 'Save Audio';
+    return 'Save File';
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-black uppercase tracking-tight">Transfer Log</h2>
+          <h2 className="text-3xl font-black text-black uppercase tracking-tight">Transfer Log & Saved Media</h2>
           <p className="text-xs font-bold text-slate-700 mt-1">
-            Historical logs of all sent and received files with streaming SHA-256 digests.
+            Historical logs of received photos, videos, and documents with instant 1-click device saving.
           </p>
         </div>
         <Button variant="secondary" size="sm" onClick={fetchHistory} loading={loadingHistory}>
@@ -74,53 +92,68 @@ export function TransfersPage() {
 
                 {/* File Items in Transfer */}
                 <div className="space-y-2">
-                  {transfer.files?.map((file, idx) => (
-                    <div
-                      key={idx}
-                      className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-[#FAF7F0] border-2 border-black text-xs font-extrabold"
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-[#FFE600] border-2 border-black flex items-center justify-center text-black shrink-0 shadow-brutal-sm">
-                          <FileText className="w-4 h-4 stroke-[2.5]" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-black text-black truncate">{file.name}</p>
-                          <div className="flex items-center gap-3 text-[11px] text-slate-700 font-mono mt-0.5">
-                            <span>{formatBytes(file.size)}</span>
-                            {file.verifiedHash && (
-                              <span className="text-slate-600 truncate max-w-xs" title={`SHA-256: ${file.verifiedHash}`}>
-                                SHA-256: {file.verifiedHash.substring(0, 12)}...
-                              </span>
+                  {transfer.files?.map((file, idx) => {
+                    const downloadUrl = `${getApiBaseUrl()}/api/files/download/${file.storedName || file.id}`;
+
+                    return (
+                      <div
+                        key={idx}
+                        className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-[#FAF7F0] border-2 border-black text-xs font-extrabold"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-lg bg-[#FFE600] border-2 border-black flex items-center justify-center text-black shrink-0 shadow-brutal-sm">
+                            {getFileIcon(file.name)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-black text-black truncate">{file.name}</p>
+                            <div className="flex items-center gap-3 text-[11px] text-slate-700 font-mono mt-0.5">
+                              <span>{formatBytes(file.size)}</span>
+                              {file.verifiedHash && (
+                                <span className="text-slate-600 truncate max-w-xs" title={`SHA-256: ${file.verifiedHash}`}>
+                                  SHA-256: {file.verifiedHash.substring(0, 12)}...
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Inline Media Preview Thumbnail if Image or Video */}
+                            {transfer.status === 'completed' && file.storedName && isImageFile(file.name) && (
+                              <div className="mt-2">
+                                <img
+                                  src={downloadUrl}
+                                  alt={file.name}
+                                  className="w-20 h-20 object-cover rounded-lg border-2 border-black shadow-brutal-sm"
+                                />
+                              </div>
                             )}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Download & Delete Actions */}
-                      <div className="flex items-center gap-2">
-                        {transfer.status === 'completed' && file.storedName && (
-                          <a
-                            href={`${getApiBaseUrl()}/api/files/download/${file.storedName}`}
-                            download={file.name}
-                            target="_blank"
-                            rel="noreferrer"
+                        {/* Download & Save Media Actions */}
+                        <div className="flex items-center gap-2">
+                          {transfer.status === 'completed' && file.storedName && (
+                            <a
+                              href={downloadUrl}
+                              download={file.name}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <Button variant="primary" size="sm" icon={Download}>
+                                {getSaveButtonText(file.name)}
+                              </Button>
+                            </a>
+                          )}
+
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDelete(file.id || file.storedName)}
                           >
-                            <Button variant="primary" size="sm" icon={Download}>
-                              Save File
-                            </Button>
-                          </a>
-                        )}
-
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => handleDelete(file.id || file.storedName)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
