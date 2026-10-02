@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from '../components/Common/Card.jsx';
 import { Button } from '../components/Common/Button.jsx';
 import { Badge } from '../components/Common/Badge.jsx';
-import { SaveMediaModal } from '../components/Common/SaveMediaModal.jsx';
 import { useTransfer } from '../context/TransferContext.jsx';
 import { formatBytes, formatDate } from '../utils/formatters.js';
 import { getApiBaseUrl } from '../utils/network.js';
@@ -11,16 +10,6 @@ import { Download, Trash2, FileText, Image, Video, Music } from 'lucide-react';
 
 export function TransfersPage() {
   const { transferHistory, fetchHistory, loadingHistory } = useTransfer();
-  const [selectedFileForSave, setSelectedFileForSave] = useState(null);
-
-  const handleOpenSaveModal = (file, downloadUrl) => {
-    setSelectedFileForSave({
-      name: file.name,
-      downloadUrl,
-      type: file.type,
-      size: file.size
-    });
-  };
 
   const handleDelete = async (fileId) => {
     try {
@@ -139,17 +128,22 @@ export function TransfersPage() {
                           </div>
                         </div>
 
-                        {/* Download & Save Media Actions */}
+                        {/* Direct File Download Action */}
                         <div className="flex items-center gap-2">
                           {transfer.status === 'completed' && file.storedName && (
-                            <Button
-                              variant="primary"
-                              size="sm"
-                              icon={Download}
-                              onClick={() => handleOpenSaveModal(file, downloadUrl)}
+                            <a
+                              href={downloadUrl}
+                              download={file.name}
+                              target="_self"
                             >
-                              {getSaveButtonText(file.name)}
-                            </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                icon={Download}
+                              >
+                                {getSaveButtonText(file.name)}
+                              </Button>
+                            </a>
                           )}
 
                           <Button
@@ -169,13 +163,6 @@ export function TransfersPage() {
           </div>
         )}
       </Card>
-
-      {/* Save Media Options Modal */}
-      <SaveMediaModal
-        isOpen={!!selectedFileForSave}
-        onClose={() => setSelectedFileForSave(null)}
-        fileData={selectedFileForSave}
-      />
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { Card } from '../Common/Card.jsx';
 import { Button } from '../Common/Button.jsx';
 import { ProgressBar } from '../Common/ProgressBar.jsx';
 import { Badge } from '../Common/Badge.jsx';
-import { SaveMediaModal } from '../Common/SaveMediaModal.jsx';
 import { Globe, ArrowRight, Download, CheckCircle2, FileText, RefreshCw } from 'lucide-react';
 import { formatBytes, formatSpeed } from '../../utils/formatters.js';
 import { getApiBaseUrl } from '../../utils/network.js';
@@ -17,21 +16,8 @@ export function InternetCodeInputCard() {
   const [status, setStatus] = useState('idle'); // idle, looking_up, paired, downloading, completed, failed
   const [progressPercent, setProgressPercent] = useState(0);
   const [error, setError] = useState(null);
-  const [selectedSaveData, setSelectedSaveData] = useState(null);
 
   const { socket } = useSocket();
-
-  const handleOpenSaveModal = () => {
-    if (!sessionInfo) return;
-    const downloadUrl = `${getApiBaseUrl()}/api/relay/${sessionInfo.code}/download`;
-    const firstFile = sessionInfo.files?.[0] || {};
-    setSelectedSaveData({
-      name: firstFile.name || `payload_${sessionInfo.code}.bin`,
-      downloadUrl,
-      type: firstFile.type || '',
-      size: firstFile.size || sessionInfo.totalBytes || 0
-    });
-  };
 
   const handleLookup = async (e) => {
     e.preventDefault();
@@ -186,15 +172,21 @@ export function InternetCodeInputCard() {
               The file payload has been received and verified via SHA-256.
             </p>
 
-            <Button
-              variant="primary"
-              size="lg"
-              icon={Download}
-              onClick={handleOpenSaveModal}
-              className="w-full sm:w-auto"
+            <a
+              href={`${getApiBaseUrl()}/api/relay/${sessionInfo.code}/download`}
+              download={sessionInfo.files?.[0]?.name || 'download'}
+              target="_self"
+              className="inline-block w-full sm:w-auto"
             >
-              Save File / Media Options
-            </Button>
+              <Button
+                variant="primary"
+                size="lg"
+                icon={Download}
+                className="w-full sm:w-auto"
+              >
+                Download Received File
+              </Button>
+            </a>
           </div>
         )}
 
@@ -214,13 +206,6 @@ export function InternetCodeInputCard() {
           </div>
         )}
       </div>
-
-      {/* Save Media Options Modal */}
-      <SaveMediaModal
-        isOpen={!!selectedSaveData}
-        onClose={() => setSelectedSaveData(null)}
-        fileData={selectedSaveData}
-      />
     </Card>
   );
 }
