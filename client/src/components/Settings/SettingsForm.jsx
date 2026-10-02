@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../Common/Card.jsx';
 import { Button } from '../Common/Button.jsx';
 import { useSettings } from '../../context/SettingsContext.jsx';
-import { generateCoolDeviceName } from '../../utils/nameGenerator.js';
-import { Save, CheckCircle2, Smartphone, Shield, Layers, Sparkles } from 'lucide-react';
+import { Save, CheckCircle2, Smartphone, Shield, Layers } from 'lucide-react';
 
 export function SettingsForm() {
   const { settings, updateSettings } = useSettings();
@@ -13,11 +12,6 @@ export function SettingsForm() {
   const [maxConcurrentTransfers, setMaxConcurrentTransfers] = useState(settings.maxConcurrentTransfers || 5);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const handleRandomizeName = () => {
-    const coolName = generateCoolDeviceName();
-    setDeviceName(coolName);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,19 +43,9 @@ export function SettingsForm() {
 
         {/* Device Name */}
         <div>
-          <label className="block text-xs font-black text-black uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4 stroke-[2.5]" />
-              <span>Device Name</span>
-            </span>
-            <button
-              type="button"
-              onClick={handleRandomizeName}
-              className="text-[11px] font-black uppercase tracking-wider text-black bg-[#FFE600] px-2.5 py-1 rounded-lg border-2 border-black shadow-brutal-sm hover:bg-[#00F0FF] transition-all flex items-center gap-1.5"
-            >
-              <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Randomize Name</span>
-            </button>
+          <label className="block text-xs font-black text-black uppercase tracking-wider mb-2 flex items-center gap-2">
+            <Smartphone className="w-4 h-4 stroke-[2.5]" />
+            <span>Device Name</span>
           </label>
           <input
             type="text"
