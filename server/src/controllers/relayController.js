@@ -145,14 +145,18 @@ export class RelayController {
 
       if (session && session.finalFile && fs.existsSync(session.finalFile.filePath)) {
         const fileObj = session.files[0];
-        return res.download(session.finalFile.filePath, fileObj ? fileObj.name : session.finalFile.filename);
+        const filename = fileObj ? fileObj.name : session.finalFile.filename;
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+        return res.download(session.finalFile.filePath, filename);
       }
 
       // Fallback: Check MetadataStore history for relay_<cleanCode>
       const transfers = MetadataStore.getTransfers();
       const match = transfers.find(t => t.id === `relay_${cleanCode}`);
       if (match && match.files && match.files[0] && match.files[0].filePath && fs.existsSync(match.files[0].filePath)) {
-        return res.download(match.files[0].filePath, match.files[0].name);
+        const filename = match.files[0].name;
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+        return res.download(match.files[0].filePath, filename);
       }
 
       return res.status(404).json({ success: false, error: 'File not ready or expired' });

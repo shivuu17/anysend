@@ -261,6 +261,7 @@ export class TransferController {
         return res.status(404).json({ success: false, error: 'File not found on disk' });
       }
 
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(targetFile.name)}"`);
       res.download(targetFile.filePath, targetFile.name);
     } catch (err) {
       res.status(500).json({ success: false, error: err.message });
