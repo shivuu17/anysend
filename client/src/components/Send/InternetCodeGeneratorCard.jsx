@@ -109,6 +109,7 @@ export function InternetCodeGeneratorCard({ selectedFiles, onReset }) {
           transferId: code,
           fileObj: rawFile,
           fileMeta: meta,
+          isRelay: true,
           targetHostUrl: null, // Uses default API base URL
           onProgress: (p) => {
             const currentTotal = totalTransferred + p.bytesTransferred;

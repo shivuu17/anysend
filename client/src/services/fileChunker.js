@@ -13,10 +13,16 @@ export class FileChunker {
     fileObj, // Raw browser File object
     fileMeta, // File metadata object from transfer session { id, name, size }
     targetHostUrl = null,
+    isRelay = false,
     onProgress = null,
     abortSignal = null
   }) {
     const baseUrl = targetHostUrl ? `${targetHostUrl}/api` : `${getApiBaseUrl()}/api`;
+    const isRelaySession = isRelay || /^\d{6}$/.test(String(transferId).trim());
+    const chunkEndpoint = isRelaySession
+      ? `${baseUrl}/relay/${transferId}/chunk`
+      : `${baseUrl}/transfer/${transferId}/chunk`;
+
     const totalChunks = Math.ceil(fileObj.size / CHUNK_SIZE);
 
     // 1. Calculate overall SHA-256 hash first for integrity check
@@ -48,7 +54,7 @@ export class FileChunker {
         formData.append('hash', fileHash);
       }
 
-      const response = await axios.post(`${baseUrl}/transfer/${transferId}/chunk`, formData, {
+      const response = await axios.post(chunkEndpoint, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         signal: abortSignal,
         timeout: 60000

@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { TransferService } from '../services/transferService.js';
 import { FileService } from '../services/fileService.js';
+import { RelayService } from '../services/relayService.js';
+import { RelayController } from './relayController.js';
 import { MetadataStore } from '../storage/metadataStore.js';
 import { logger } from '../utils/logger.js';
 
@@ -89,8 +91,14 @@ export class TransferController {
       return res.status(400).json({ success: false, error: 'Chunk buffer missing' });
     }
 
-    const transfer = TransferService.getTransfer(transferId);
+    let transfer = TransferService.getTransfer(transferId);
     if (!transfer) {
+      // Check if transferId is a 6-digit internet code relay session
+      const relaySession = RelayService.getSession(transferId);
+      if (relaySession) {
+        req.params.code = transferId;
+        return RelayController.uploadChunk(req, res);
+      }
       return res.status(404).json({ success: false, error: 'Transfer session not found or expired' });
     }
 
