@@ -1,4 +1,4 @@
-# LocalDrop 🚀
+# Anysend 🚀
 
 ### Cross-Platform Local File Transfer Application (P2P Wi-Fi & Hotspot)
 
