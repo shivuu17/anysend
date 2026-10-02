@@ -3,10 +3,10 @@ import { Card } from '../Common/Card.jsx';
 import { Button } from '../Common/Button.jsx';
 import { ProgressBar } from '../Common/ProgressBar.jsx';
 import { Badge } from '../Common/Badge.jsx';
+import { SaveMediaModal } from '../Common/SaveMediaModal.jsx';
 import { Globe, ArrowRight, Download, CheckCircle2, FileText, RefreshCw } from 'lucide-react';
 import { formatBytes, formatSpeed } from '../../utils/formatters.js';
 import { getApiBaseUrl } from '../../utils/network.js';
-import { saveToGallery } from '../../utils/gallerySaver.js';
 import { useSocket } from '../../context/SocketContext.jsx';
 import api from '../../services/api.js';
 
@@ -17,23 +17,20 @@ export function InternetCodeInputCard() {
   const [status, setStatus] = useState('idle'); // idle, looking_up, paired, downloading, completed, failed
   const [progressPercent, setProgressPercent] = useState(0);
   const [error, setError] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [selectedSaveData, setSelectedSaveData] = useState(null);
 
   const { socket } = useSocket();
 
-  const handleDownloadFile = async () => {
+  const handleOpenSaveModal = () => {
     if (!sessionInfo) return;
-    try {
-      setSaving(true);
-      const downloadUrl = `${getApiBaseUrl()}/api/relay/${sessionInfo.code}/download`;
-      const fileName = sessionInfo.files?.[0]?.name || `payload_${sessionInfo.code}.bin`;
-      const fileType = sessionInfo.files?.[0]?.type || '';
-      await saveToGallery(downloadUrl, fileName, fileType);
-    } catch (err) {
-      console.error('Download error:', err);
-    } finally {
-      setSaving(false);
-    }
+    const downloadUrl = `${getApiBaseUrl()}/api/relay/${sessionInfo.code}/download`;
+    const firstFile = sessionInfo.files?.[0] || {};
+    setSelectedSaveData({
+      name: firstFile.name || `payload_${sessionInfo.code}.bin`,
+      downloadUrl,
+      type: firstFile.type || '',
+      size: firstFile.size || sessionInfo.totalBytes || 0
+    });
   };
 
   const handleLookup = async (e) => {
@@ -193,11 +190,10 @@ export function InternetCodeInputCard() {
               variant="primary"
               size="lg"
               icon={Download}
-              loading={saving}
-              onClick={handleDownloadFile}
+              onClick={handleOpenSaveModal}
               className="w-full sm:w-auto"
             >
-              Save Photo / File to Gallery
+              Save File / Media Options
             </Button>
           </div>
         )}
@@ -218,6 +214,13 @@ export function InternetCodeInputCard() {
           </div>
         )}
       </div>
+
+      {/* Save Media Options Modal */}
+      <SaveMediaModal
+        isOpen={!!selectedSaveData}
+        onClose={() => setSelectedSaveData(null)}
+        fileData={selectedSaveData}
+      />
     </Card>
   );
 }

@@ -2,26 +2,24 @@ import React, { useState } from 'react';
 import { Card } from '../components/Common/Card.jsx';
 import { Button } from '../components/Common/Button.jsx';
 import { Badge } from '../components/Common/Badge.jsx';
+import { SaveMediaModal } from '../components/Common/SaveMediaModal.jsx';
 import { useTransfer } from '../context/TransferContext.jsx';
 import { formatBytes, formatDate } from '../utils/formatters.js';
 import { getApiBaseUrl } from '../utils/network.js';
-import { saveToGallery } from '../utils/gallerySaver.js';
 import api from '../services/api.js';
-import { Download, Trash2, FileText, Image, Video, Music, Check } from 'lucide-react';
+import { Download, Trash2, FileText, Image, Video, Music } from 'lucide-react';
 
 export function TransfersPage() {
   const { transferHistory, fetchHistory, loadingHistory } = useTransfer();
-  const [savingFileId, setSavingFileId] = useState(null);
+  const [selectedFileForSave, setSelectedFileForSave] = useState(null);
 
-  const handleSaveToGallery = async (downloadUrl, fileName, fileType, fileId) => {
-    try {
-      setSavingFileId(fileId);
-      await saveToGallery(downloadUrl, fileName, fileType);
-    } catch (err) {
-      console.error('Save to gallery error:', err);
-    } finally {
-      setSavingFileId(null);
-    }
+  const handleOpenSaveModal = (file, downloadUrl) => {
+    setSelectedFileForSave({
+      name: file.name,
+      downloadUrl,
+      type: file.type,
+      size: file.size
+    });
   };
 
   const handleDelete = async (fileId) => {
@@ -148,8 +146,7 @@ export function TransfersPage() {
                               variant="primary"
                               size="sm"
                               icon={Download}
-                              loading={savingFileId === (file.id || file.storedName)}
-                              onClick={() => handleSaveToGallery(downloadUrl, file.name, file.type, file.id || file.storedName)}
+                              onClick={() => handleOpenSaveModal(file, downloadUrl)}
                             >
                               {getSaveButtonText(file.name)}
                             </Button>
@@ -172,6 +169,13 @@ export function TransfersPage() {
           </div>
         )}
       </Card>
+
+      {/* Save Media Options Modal */}
+      <SaveMediaModal
+        isOpen={!!selectedFileForSave}
+        onClose={() => setSelectedFileForSave(null)}
+        fileData={selectedFileForSave}
+      />
     </div>
   );
 }
