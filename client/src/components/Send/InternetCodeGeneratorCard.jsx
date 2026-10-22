@@ -176,7 +176,7 @@ export function InternetCodeGeneratorCard({ selectedFiles, onReset }) {
             
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-black pt-2">
               <Radio className="w-4 h-4 text-black animate-pulse stroke-[3]" />
-              <span>Receiver can open LocalDrop on any network & enter code to connect!</span>
+              <span>Receiver can open Anysend on any network & enter code to connect!</span>
             </div>
           </div>
         )}

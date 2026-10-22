@@ -1,7 +1,7 @@
 {
-  "name": "localdrop-server",
+  "name": "anysend-server",
   "version": "1.0.0",
-  "description": "LocalDrop Backend Server - Cross-Platform Local File Transfer Engine",
+  "description": "Anysend Backend Server - Cross-Platform Local File Transfer Engine",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

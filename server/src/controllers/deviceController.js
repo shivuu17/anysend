@@ -11,7 +11,7 @@ export class DeviceController {
       res.json({
         success: true,
         version: PROTOCOL_VERSION,
-        deviceName: settings.deviceName || 'LocalDrop Host',
+        deviceName: settings.deviceName || 'Anysend Host',
         ip: primaryIp,
         interface: primaryInterface,
         allAddresses,

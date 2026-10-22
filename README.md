@@ -2,14 +2,20 @@
 
 ### Cross-Platform Local File Transfer Application (P2P Wi-Fi & Hotspot)
 
-**LocalDrop** is a production-oriented, zero-cloud file transfer application inspired by AirDrop and LocalSend. It enables seamless, high-speed transfers of photos, 4K videos, documents, ZIP archives, and multi-gigabyte files between **iPhone, Android, Windows, macOS, and Linux** devices directly over your local network.
+**Anysend** is a production-oriented, zero-cloud web app for transferring photos, 4K videos, documents, ZIP archives, and multi-gigabyte files between **iPhone, Android, Windows, macOS, and Linux** devices directly over a local network. It provides an AirDrop-style experience from a browser: one device hosts the app, the sender selects files, and the receiver approves the transfer without uploading data to an external cloud service.
+
+### What the Web App Does
+
+Anysend turns a local browser session into a simple send-and-receive workspace. A receiver creates a temporary session and displays a QR code or local network address. A sender opens Anysend on another device, chooses files through the drag-and-drop or file picker interface, and connects by scanning the QR code or entering the address manually. The receiver can review the device and file list before accepting the transfer.
+
+After approval, Anysend streams files in chunks over the local network while Socket.IO reports progress, transfer speed, and estimated time remaining on both devices. Completed files are verified with SHA-256 checksums, sanitized to prevent unsafe paths, and recorded in transfer history. Because the app is web-first, phones and tablets can participate through Safari or Chrome without installing a native app; a Node.js host on the local network provides the transfer server.
 
 ---
 
 ## 🌟 Key Features
 
 * **Zero Cloud Dependency**: Transfers occur directly over local IPv4 LAN or mobile hotspot. No AWS S3, Supabase, or external uploads.
-* **Web-First Architecture**: Open LocalDrop in your browser on iPhone or Android without installing native store apps.
+* **Web-First Architecture**: Open Anysend in your browser on iPhone or Android without installing native store apps.
 * **Streaming & Chunking Engine**: 4 MB chunked HTTP streaming handles 100 MB, 1 GB, or 50 GB files without RAM buffering or memory crashes.
 * **SHA-256 Integrity Verification**: Incremental browser calculation (`js-sha256`) and server-side stream verification ensure 100% bit-exact accuracy.
 * **QR-Based Device Pairing**: Receiver generates a secure QR code payload with session token and expiration timestamp.
@@ -30,7 +36,7 @@
 ## 📂 Project Architecture
 
 ```
-localdrop/
+anysend/
 ├── client/
 │   ├── src/
 │   │   ├── components/
@@ -93,7 +99,7 @@ Create `.env` in the `server` directory (optional defaults are already provided)
 
 ```env
 PORT=5000
-DEVICE_NAME=LocalDrop Host
+DEVICE_NAME=Anysend Host
 UPLOAD_DIR=./uploads
 AUTO_ACCEPT=false
 MAX_CONCURRENT_TRANSFERS=5
@@ -139,7 +145,7 @@ Open `http://<your-local-ip>:5000` from any phone, laptop, or tablet on your net
 ## 📱 How to Use (Two-Device Transfer Flow)
 
 1. **Start Receiver**:
-   * Open LocalDrop on the host computer or phone.
+   * Open Anysend on the host computer or phone.
    * Go to **Receive Mode** page.
    * A QR code and local IP address (e.g., `http://192.168.1.15:5000`) will be displayed.
 
@@ -172,4 +178,4 @@ Open `http://<your-local-ip>:5000` from any phone, laptop, or tablet on your net
 
 * **Local Network Reachability**: Ensure both devices are connected to the same Wi-Fi router or hotspot. Some public or corporate Wi-Fi networks enable **Client Isolation** (AP Isolation), which prevents devices on the same subnet from communicating. Use a mobile hotspot if AP isolation is active.
 * **Camera Access for QR Scanning**: iOS Safari and Android Chrome require explicit camera permission when clicking **Scan QR Code**. If camera access is denied, use the **Manual IP Address** fallback option.
-* **Browser Server Limitation**: A browser running on iOS/Android cannot run an unrestricted native listening TCP server. LocalDrop addresses this by hosting the Node.js process on a host machine, making it accessible to mobile browsers on the LAN.
+* **Browser Server Limitation**: A browser running on iOS/Android cannot run an unrestricted native listening TCP server. Anysend addresses this by hosting the Node.js process on a host machine, making it accessible to mobile browsers on the LAN.
